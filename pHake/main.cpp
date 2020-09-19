@@ -1,6 +1,7 @@
 #include "Gui/pOverlay.hpp"
 #include <Windows.h>
 #include <array>
+#include "Memory/Process.h"
 #include "SDK/World.hpp"
 #include "Helper.hpp"
 #include "pTimer.hpp"
@@ -23,8 +24,13 @@ struct settings
 	float flySpeed = 0.05;
 	float kmh = 0.f;
 
-	std::array<std::string, 3> playerStates = { "default", "fast", "max" };
-	std::array<std::string, 4> vehicleStates = { "default", "race", "max", "fly" };
+	struct keys
+	{
+		uint32_t menu = 0;
+		uint32_t teleport = 0;
+		uint32_t boostPlayer = 0;
+		uint32_t boostVehicle = 0;
+	}keys;
 
 }settings;
 
@@ -45,8 +51,7 @@ void TeleportToWaypoint()
 		return;
 	}
 
-	if (!inVehicle && settings.fly)
-	{
+	if (!inVehicle && settings.fly) {
 		waypoint.z = 300.f;
 		world.localPlayer.position.xyz(waypoint);
 	}
@@ -74,12 +79,14 @@ void TeleportToWaypoint()
 
 void BoostPlayer()
 {
-	static uint8_t state = 0; state++;
+	static std::array<std::string, 3> modes = { "default", "fast", "max" };
+	static uint8_t curr_mode = 0;
 
-	if (state > settings.playerStates.size() - 1)
-		state = 0;
+	curr_mode++;
+	if (curr_mode > modes.size() - 1)
+		curr_mode = 0;
 	
-	switch (state)
+	switch (curr_mode)
 	{
 	case 0: 		
 		world.localPlayer.playerInfo.walkMP(1);
@@ -102,17 +109,19 @@ void BoostPlayer()
 		settings.flySpeed = 0.5;
 		break;
 	}
-	menu->notification.add("Player mode set to " + settings.playerStates[state]);
+	menu->notification.add("Player mode set to " + modes[curr_mode]);
 }
 
 void BoostVehicle()
 {
-	static uint8_t state = 0; state++;
+	static std::array<std::string, 4> modes = { "default", "race", "max", "fly" };
+	static uint8_t curr_mode = 0;
 
-	if (state > settings.vehicleStates.size() - 1)
-		state = 0;
+	curr_mode++;
+	if (curr_mode > modes.size() - 1)
+		curr_mode = 0;
 
-	switch (state)
+	switch (curr_mode)
 	{
 	case 0:
 		world.localPlayer.vehicle.gravity(9.8);
@@ -143,32 +152,26 @@ void BoostVehicle()
 		world.localPlayer.vehicle.handling.acceleration(2.f);
 		break;
 	}
-	menu->notification.add("Vehicle mode set to " + settings.vehicleStates[state]);
+	menu->notification.add("Vehicle mode set to " + modes[curr_mode]);
 }
 
 void loopGodmode()
 {
-	static bool check = false;
-
 	if (settings.godmode)
 	{
-		if (!world.localPlayer.god() || !world.localPlayer.vehicle.god())
-		{
+		if (!world.localPlayer.god())
 			world.localPlayer.god(1);
-			world.localPlayer.vehicle.god(1);
-		}
 
-		if (!check)
-			check = true;	
+		if (!world.localPlayer.vehicle.god())
+			world.localPlayer.vehicle.god(1);
 	}
 	else
 	{
-		if (check)
-		{
+		if (world.localPlayer.god())
 			world.localPlayer.god(0);
+
+		if (world.localPlayer.vehicle.god())
 			world.localPlayer.vehicle.god(0);
-			check = false;
-		}
 	}
 }
 
@@ -177,15 +180,13 @@ void loopNeverWanted()
 	if (settings.neverwanted)
 	{
 		if (world.localPlayer.playerInfo.wantedLevel() > 0)
-		{
 			world.localPlayer.playerInfo.wantedLevel(0);
-		}
 	}
 }
 
 void loopRpLoop()
 {
-	if (settings.rploop)
+	if (settings.rploop) 
 	{
 		world.localPlayer.playerInfo.wantedLevel(5);
 		world.localPlayer.playerInfo.wantedLevel(0);
@@ -196,25 +197,16 @@ void loopTrigger()
 {
 	static bool check = false;
 
-	if (settings.trigger)
+	int32_t crossid = mem.read<int32_t>(mem.base + 0x1F63020); // 0 = Nothing, 1 = Hostile, 2 = Friendly, 3 = Dead/Invincible
+	if (crossid != 0 && crossid < 3 && !check)
 	{
-		int32_t crossid = mem.read<int32_t>(mem.base + 0x1F63020); // 0 = Nothing, 1 = Hostile, 2 = Friendly, 3 = Dead/Invincible
-		if (crossid != 0 && crossid <= 2)
-		{
-			if (!check)
-			{
-				Key::Down::LMouse();
-				check = true;
-			}
-		}
-		else
-		{
-			if (check)
-			{
-				Key::Up::LMouse();
-				check = false;
-			}
-		}
+		Key::Down::LMouse();
+		check = true;
+	}
+	else if(check)
+	{
+		Key::Up::LMouse();
+		check = false;
 	}
 }
 
@@ -252,10 +244,10 @@ void loopFly()
 		check = true;
 		if (HIBYTE(GetAsyncKeyState(0x57)) && !world.localPlayer.inVehicle())
 		{
-			if (mem.read<uint8_t>(mem.base + 0x1440763) != 0x90)
+			if (mem.read<uint8_t>(mem.base + 0x143F5BB) != 0x90)
 			{
-				mem.writeBytes(mem.base + 0x1440763, { 0x90, 0x90, 0x90, 0x90 }); // removes writing to xyz
-				mem.writeBytes(mem.base + 0x788AF2, { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 }); // removes writing to speedZ
+				mem.writeBytes(mem.base + 0x143F5BB, { 0x90, 0x90, 0x90, 0x90 }); // removes writing to xyz
+				mem.writeBytes(mem.base + 0x787D12, { 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90, 0x90 }); // removes writing to speedZ
 			}
 
 			vec3 cam_pos = mem.read<vec3>(mem.base + 0x1F6F900);
@@ -277,19 +269,17 @@ void loopFly()
 	{
 		if (check)
 		{
-			world.localPlayer.speedXYZ(0, 0, 0);
-
-			mem.writeBytes(mem.base + 0x1440763, { 0x0F, 0x29, 0x48, 0x50 }); // restoring the original values
-			mem.writeBytes(mem.base + 0x788AF2, { 0xF3, 0x0F, 0x11, 0x83, 0x28, 0x03, 0x00, 0x00 });
-
 			check = false;
+			world.localPlayer.speedXYZ(0, 0, 0);
+			mem.writeBytes(mem.base + 0x143F5BB, { 0x0F, 0x29, 0x48, 0x50 }); // restoring the original values
+			mem.writeBytes(mem.base + 0x787D12, { 0xF3, 0x0F, 0x11, 0x83, 0x28, 0x03, 0x00, 0x00 });
 		}
 	}
 }
 
 void loopKeys()
 {
-	if (HIBYTE(GetAsyncKeyState(VK_MENU)))
+	if (HIBYTE(GetAsyncKeyState(settings.keys.menu)))
 	{
 		menu->toggle();
 		sleep(150);
@@ -299,17 +289,17 @@ void loopKeys()
 		BoostPlayer();
 		sleep(150);
 	}
-	if (HIBYTE(GetAsyncKeyState(VK_NUMPAD0)))
+	if (HIBYTE(GetAsyncKeyState(settings.keys.teleport)))
 	{
 		TeleportToWaypoint();
 		sleep(150);
 	}
-	if (HIBYTE(GetAsyncKeyState(VK_NUMPAD1)))
+	if (HIBYTE(GetAsyncKeyState(settings.keys.boostPlayer)))
 	{
 		BoostPlayer();
 		sleep(150);
 	}
-	if (HIBYTE(GetAsyncKeyState(VK_NUMPAD2)))
+	if (HIBYTE(GetAsyncKeyState(settings.keys.boostVehicle)))
 	{
 		BoostVehicle();
 		sleep(150);
@@ -345,6 +335,11 @@ int main()
 	settings.trigger = cfg->addGet<bool>("Trigger", 0);
 	settings.weaponmax = cfg->addGet<bool>("WeaponMax", 0);
 	settings.fly = cfg->addGet<bool>("Fly", 0);
+	cfg->addComment("Keycodes: --> https://github.com/xhz8s/pHake/wiki/Keycodes <--");
+	settings.keys.menu = cfg->addGet<uint32_t>("Menu Key", VK_MENU);
+	settings.keys.teleport = cfg->addGet<uint32_t>("Teleport Key", VK_NUMPAD0);
+	settings.keys.boostPlayer = cfg->addGet<uint32_t>("BoostPlayer Key", VK_NUMPAD1);
+	settings.keys.boostVehicle = cfg->addGet<uint32_t>("BoostVehicle Key", VK_NUMPAD2);
 
 	pTimer timer;
 	timer.setLoop(loopGodmode, 250);
