@@ -102,13 +102,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <AdditionalIncludeDirectories>C:\Libraries\SFML-2.5.1\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>C:\Libraries\SFML-2.5.1\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>sfml-audio.lib;sfml-graphics.lib;sfml-window.lib;sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -159,12 +160,13 @@
     <ClInclude Include="Gui\pOverlay.hpp" />
     <ClInclude Include="Gui\pWindow.hpp" />
     <ClInclude Include="Helper.hpp" />
-    <ClInclude Include="Memory\Process.h" />
+    <ClInclude Include="Memory\Datawrapper.hpp" />
+    <ClInclude Include="Memory\Process.hpp" />
     <ClInclude Include="pSettings.hpp" />
     <ClInclude Include="SDK\AmmoInfo.hpp" />
     <ClInclude Include="SDK\_info_.txt" />
     <ClInclude Include="SDK\LocalPlayer.hpp" />
-    <ClInclude Include="SDK\PlayerInfo.h" />
+    <ClInclude Include="SDK\PlayerInfo.hpp" />
     <ClInclude Include="SDK\Position.hpp" />
     <ClInclude Include="SDK\Vehicle.hpp" />
     <ClInclude Include="SDK\VehicleHandling.hpp" />
@@ -178,6 +180,8 @@
     <ClCompile Include="Gui\lib\pList.cpp" />
     <ClCompile Include="Gui\lib\pMouse.cpp" />
     <ClCompile Include="Gui\lib\pNotificationCenter.cpp" />
+    <ClCompile Include="Gui\pOverlay.cpp" />
+    <ClCompile Include="Gui\pWindow.cpp" />
     <ClCompile Include="main.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\Libraries\SFML-2.5.1\include</AdditionalIncludeDirectories>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp17</LanguageStandard>

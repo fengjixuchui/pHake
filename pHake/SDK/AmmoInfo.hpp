@@ -1,13 +1,14 @@
 #ifndef _AMMOINFO_HPP_
 #define _AMMOINFO_HPP_
 
-#include "../Memory/Process.h"
+#include "../Memory/Process.hpp"
+#include "../Memory/Datawrapper.hpp"
 
 class AmmoInfo : public DataWrapper<0x18 + 0x4>
 {
 public:
 	AmmoInfo() {}
-	AmmoInfo(HANDLE& h) :DataWrapper(h) {}
+	AmmoInfo(Process* const& proc) :DataWrapper(proc) {}
 
 	uint32_t ammo()
 	{

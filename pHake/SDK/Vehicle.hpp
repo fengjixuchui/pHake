@@ -1,7 +1,8 @@
 #ifndef _VEHICLE_HPP_
 #define _VEHICLE_HPP_
 
-#include "../Memory/Process.h"
+#include "../Memory/Process.hpp"
+#include "../Memory/Datawrapper.hpp"
 #include "Position.hpp"
 #include "VehicleHandling.hpp"
 
@@ -9,35 +10,48 @@ class Vehicle : public DataWrapper<0x938 + 0x8>
 {
 public:
 	Vehicle() {}
-	Vehicle(HANDLE& h) :DataWrapper(h) {
-		position = Position(h);
-		handling = VehicleHandling(h);
+	Vehicle(Process* const& proc) :DataWrapper(proc) {
+		position = Position(proc);
+		handling = VehicleHandling(proc);
 	}
 
-	void updateSub(uint64_t baseAddress)
+	void UpdateSub(uint64_t baseAddress)
 	{
-		this->update(baseAddress);
-		position.update(this->read<uint64_t>(0x30));
-		handling.update(this->read<uint64_t>(0x938));
+		this->Update(baseAddress);
+		position.Update(this->read<uint64_t>(0x30));
+		handling.Update(this->read<uint64_t>(0x938));
 	}
 
 	Position position;
 
-	bool god()
+	bool freeze()
 	{
-		if (this->read<bool>(0x189) != 1)
-		{
-			return false;
-		}
-		else
-		{
+		if (this->read<uint8_t>(0x2E) == 2)
 			return true;
-		}
+		else
+			return true;
 	}
 
-	void god(bool value)
+	void freeze(bool value)
 	{
-		this->write<bool>(0x189, value);
+		if (value)
+			this->write<uint8_t>(0x2E, 2);
+
+		else
+			this->write<uint8_t>(0x2E, 1);
+	}
+
+	bool god()
+	{
+		if (this->read<uint8_t>(0x189) == 1)
+			return true;
+		else
+			return false;
+	}
+
+	void god(uint8_t value)
+	{
+		this->write<uint8_t>(0x189, value);
 	}
 
 	float engineHealth1()
