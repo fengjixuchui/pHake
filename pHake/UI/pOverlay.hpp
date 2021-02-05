@@ -1,15 +1,15 @@
 #ifndef _POVERLAY_HPP_
 #define _POVERLAY_HPP_
 
+#include "pButton.hpp"
+#include "pItem.hpp"
+#include "pList.hpp"
+#include "pMouse.hpp"
+#include "pNotificationCenter.hpp"
+
 #include <SFML/Graphics.hpp>
 #include <Windows.h>
 #include <Dwmapi.h>
-#include <vector>
-#include "lib/pButton.hpp"
-#include "lib/pItem.hpp"
-#include "lib/pList.hpp"
-#include "lib/pMouse.hpp"
-#include "lib/pNotificationCenter.hpp"
 #pragma comment (lib, "Dwmapi.lib")
 
 struct GameInfo
@@ -41,8 +41,8 @@ private:
 	pMouse			 mouse_;
 
 public:
-	pList				list_;
-	pNotificationCenter notification_;
+	pList			    list;
+	pNotificationCenter notification;
 
 	void Create(LPCSTR Name);
 	void Toggle();
